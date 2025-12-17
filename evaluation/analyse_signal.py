@@ -130,14 +130,14 @@ def main():
     spearman_indices = []
     for model in bin_model_names:
         model_correlation = spearmanr(bin_df['Signal'], bin_df[model], nan_policy='omit')
-        spearman_values.append([model_correlation.statistic, model_correlation.pvalue])
+        spearman_values.append([f'{model}_bin',model_correlation.statistic, model_correlation.pvalue])
         spearman_indices.append(f'{model}_bin')
     for model in cont_model_names:
         model_correlation = spearmanr(cont_df['Signal'], cont_df[model], nan_policy='omit')
-        spearman_values.append([model_correlation.statistic, model_correlation.pvalue])
+        spearman_values.append([f'{model}_cont',model_correlation.statistic, model_correlation.pvalue])
         spearman_indices.append(f'{model}_cont')
     spearmanr_df = pd.DataFrame(spearman_values, index=spearman_indices,
-                                columns=['spearman_values', 'pvalues'])
+                                columns=['models','spearman_values', 'pvalues'])
     h_sp_df = hochberg_correction(spearmanr_df, 'pvalues')
     h_sp_df.to_csv(os.path.join(out_dir, 'spearman_correlations.csv'))
     ## plot performance against signal for each model
