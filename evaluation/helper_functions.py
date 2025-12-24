@@ -8,16 +8,20 @@ from matplotlib import pyplot as plt
 
 from data.helper_functions import number_of_simulation_iterations
 
-bin_model_names = ['corHMM',  'phylnn_raw', 'phylnn_fill_means',
-                   'logit_eigenvecs', 'logit_umap', 'logit_umap_supervised', 'logit_autoencoded',
+bin_model_names = ['corHMM', 'phylnn_raw', 'phylnn_fill_means',
+                   'logit_eigenvecs', 'logit_PEM','logit_umap', 'logit_umap_supervised', 'logit_autoencoded',
                    'logit_autoenc_supervised',
-                   'xgb_eigenvecs', 'xgb_umap', 'xgb_umap_supervised', 'xgb_autoencoded', 'xgb_autoenc_supervised']
+                   'xgb_eigenvecs', 'xgb_PEM', 'xgb_umap', 'xgb_umap_supervised', 'xgb_autoencoded', 'xgb_autoenc_supervised']
 bin_model_names.remove('phylnn_raw')
-cont_model_names = ['phylopars', 'PEM', 'phylnn_raw', 'phylnn_fill_means',
-                    'linear_eigenvecs', 'linear_umap', 'linear_autoencoded',
-                    'xgb_eigenvecs', 'xgb_umap', 'xgb_autoencoded']
+cont_model_names = ['phylopars', 'phylnn_raw', 'phylnn_fill_means',
+                    'linear_eigenvecs', 'linear_PEM', 'linear_umap', 'linear_autoencoded',
+                    'xgb_eigenvecs', 'xgb_PEM', 'xgb_umap', 'xgb_autoencoded']
 cont_model_names.remove('phylnn_raw')
-rename_models_and_ev_models = {'phylnn_fill_means': 'phylokNN', 'logit_eigenvecs': 'Eigenvec (L)',
+rename_models_and_ev_models = {'phylnn_fill_means': 'phylokNN',
+                               'logit_eigenvecs': 'Eigenvec (L)',
+                               'logit_PEM': 'PEM (L)',
+                               'linear_PEM': 'PEM (L)',
+                               'xgb_PEM': 'PEM (XGB)',
                                'logit_umap': 'UMAP (L)',
                                'logit_umap_supervised': 'UMAP* (L)', 'logit_autoencoded': 'Autoenc (L)',
                                'logit_autoenc_supervised': 'Autoenc* (L)',
@@ -33,11 +37,11 @@ rename_models_and_ev_models = {'phylnn_fill_means': 'phylokNN', 'logit_eigenvecs
                                'xgb_autoencoded_full_tree': 'Autoenc (Full tree) (XGB)'
                                }
 
-binary_model_order = ['corHMM', 'phylokNN', 'Eigenvec (L)', 'Eigenvec (XGB)', 'UMAP (L)', 'UMAP* (L)',
+binary_model_order = ['corHMM', 'phylokNN', 'Eigenvec (L)', 'Eigenvec (XGB)', 'PEM (L)', 'PEM (XGB)', 'UMAP (L)', 'UMAP* (L)',
                       'UMAP (XGB)', 'UMAP* (XGB)',
                       'Autoenc (L)', 'Autoenc* (L)', 'Autoenc (XGB)', 'Autoenc* (XGB)']
 
-continuous_model_order = ['phylopars','PEM', 'phylokNN', 'Eigenvec (L)', 'Eigenvec (XGB)', 'UMAP (L)',
+continuous_model_order = ['phylopars', 'phylokNN', 'Eigenvec (L)', 'Eigenvec (XGB)', 'PEM (L)', 'PEM (XGB)', 'UMAP (L)',
                           'UMAP (XGB)',
                           'Autoenc (L)', 'Autoenc (XGB)']
 

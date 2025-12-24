@@ -227,8 +227,8 @@ def read_all_results(output_too=False):
 
 def main():
     # # collate_simulation_outputs('APM', range_to_eval=10, out_dir='APM_outputs', scorer=average_precision_score)
-    # for ev_model in simulation_types['binary'] + simulation_types['continuous']:
-    #     collate_simulation_outputs(ev_model)
+    for ev_model in simulation_types['binary'] + simulation_types['continuous']:
+        collate_simulation_outputs(ev_model)
 
     print(set(_iterations_still_to_run))
     read_all_results(output_too=True)

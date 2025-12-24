@@ -40,7 +40,9 @@ def get_input_data_paths(case: str, ev_model: str, iteration: int):
 
 
 def get_prediction_data_paths(case: str, ev_model: str, iteration: int, missingness_type: str):
-    return os.path.join(prediction_path, case, ev_model, str(iteration), missingness_type)
+    out_dir = os.path.join(prediction_path, case, ev_model, str(iteration), missingness_type)
+    pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
+    return out_dir
 
 
 def check_data(ground_truth, missing_values):
@@ -94,7 +96,7 @@ def phylnn_predict(case: str, ev_model: str, iteration: int, missing_type: str, 
     else:
         raise ValueError(f'Unknown data type {bin_or_cont}')
     out_dir = get_prediction_data_paths(case, ev_model, iteration, missing_type)
-    pathlib.Path(out_dir).mkdir(parents=True, exist_ok=True)
+
 
     distance_df = pd.read_csv(distance_csv, index_col=0)
     # reduce size of distance dataframe to match trait data

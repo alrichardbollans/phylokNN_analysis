@@ -1,7 +1,6 @@
 import os
 import sys
 
-
 import pandas as pd
 import umap
 from phyloAutoEncoder import autoencode_pairwise_distances
@@ -12,11 +11,10 @@ from sklearn.preprocessing import StandardScaler
 from tqdm import tqdm
 from xgboost import XGBClassifier, XGBRegressor
 
-sys.path.append('../..')
+sys.path.append('..')
 from data.helper_functions import number_of_simulation_iterations, reduction_factor, simulation_types
 from imputation.helper_functions import missingness_types, get_input_data_paths, \
     get_prediction_data_paths, n_split_for_nested_cv, get_bin_or_cont_from_ev_model
-
 
 xgb_clf_init_kwargs = {'eval_metric': brier_score_loss}
 xgb_clf_grid_search_params = {'max_depth': [1, 3, 6, 10], 'learning_rate': [0.01, 0.1, 0.3], 'subsample': [0.5, 0.8, 1], 'gamma': [0, 0.1, 1],
@@ -190,6 +188,18 @@ def get_eigenvectors(case, ev_model, iteration):
     return X
 
 
+def get_PEM_eigenvectors(case, ev_model, iteration, missingness):
+    treepath, value_path = get_input_data_paths(case, ev_model, iteration)
+    X = pd.read_csv(os.path.join(value_path, f'{missingness}_all_PEMS.csv'), index_col=0)
+
+    broken_stick_params = pd.read_csv(os.path.join(value_path, f'{missingness}_PEM_broken_stick_parameters.csv'), index_col=0)
+    num_cols_to_use = broken_stick_params['broken_stick_number'].iloc[0]
+    X = X.iloc[:, : num_cols_to_use]
+    ## Scale the data
+    X = pd.DataFrame(StandardScaler().fit_transform(X), index=X.index)
+    return X
+
+
 def run_predictions():
     for iteration in tqdm(range(1, number_of_simulation_iterations + 1)):
         for m in missingness_types:
@@ -204,6 +214,9 @@ def run_predictions():
                     eigen_X = get_eigenvectors(case, ev_model, iteration)
                     eigen_df, eigen_encoding_vars, eigen_target_name = add_y_to_data(eigen_X, case, ev_model, iteration, m)
 
+                    PEM_X = get_PEM_eigenvectors(case, ev_model, iteration, m)
+                    PEM_df, PEM_encoding_vars, PEM_target_name = add_y_to_data(PEM_X, case, ev_model, iteration, m)
+
                     autoenc_X = get_autoencoded_data(case, ev_model, iteration)
                     autoenc_df, autoenc_encoding_vars, autoenc_target_name = add_y_to_data(autoenc_X, case, ev_model, iteration, m)
                     out_dir = get_prediction_data_paths(case, ev_model, iteration, m)
@@ -211,85 +224,101 @@ def run_predictions():
                     bin_or_cont = get_bin_or_cont_from_ev_model(ev_model)
                     if bin_or_cont == 'binary':
                         # Compare logistic regression and XGBoost models i.e. for modelling simpler relationships and complex relationships
-                        clf_instance = LogisticRegression(**logit_init_kwargs)
-                        fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_umap', umap_df, umap_encoding_vars, umap_target_name,
-                                       bin_or_cont)
-
-                        clf_instance = LogisticRegression(**logit_init_kwargs)
-                        fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_eigenvecs', eigen_df, eigen_encoding_vars,
-                                       eigen_target_name, bin_or_cont)
-
-                        clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
-                        fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_umap', umap_df, umap_encoding_vars, umap_target_name,
-                                       bin_or_cont)
-
-                        clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
-                        fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_eigenvecs', eigen_df, eigen_encoding_vars,
-                                       eigen_target_name, bin_or_cont)
+                        # clf_instance = LogisticRegression(**logit_init_kwargs)
+                        # fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_umap', umap_df, umap_encoding_vars, umap_target_name,
+                        #                bin_or_cont)
                         #
-                        # # ### Semisupervised umap
-                        semi_supervised_umap_df, semi_sup_umap_encoding_vars, semi_sup_umap_target_name = get_semi_supervised_umap_data(case,
-                                                                                                                                        ev_model,
-                                                                                                                                        iteration, m)
-                        clf_instance = LogisticRegression(**logit_init_kwargs)
-                        fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_umap_supervised', semi_supervised_umap_df,
-                                       semi_sup_umap_encoding_vars,
-                                       semi_sup_umap_target_name, bin_or_cont)
-                        clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
-                        fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_umap_supervised', semi_supervised_umap_df,
-                                       semi_sup_umap_encoding_vars,
-                                       semi_sup_umap_target_name, bin_or_cont)
+                        # clf_instance = LogisticRegression(**logit_init_kwargs)
+                        # fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_eigenvecs', eigen_df, eigen_encoding_vars,
+                        #                eigen_target_name, bin_or_cont)
 
-                        # ### autoencoder
                         clf_instance = LogisticRegression(**logit_init_kwargs)
-                        fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_autoencoded', autoenc_df, autoenc_encoding_vars,
-                                       eigen_target_name, bin_or_cont)
-
-                        clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
-                        fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_autoencoded', autoenc_df, autoenc_encoding_vars,
-                                       umap_target_name,
+                        fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_PEM', PEM_df, PEM_encoding_vars, PEM_target_name,
                                        bin_or_cont)
+                        #
+                        # clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
+                        # fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_umap', umap_df, umap_encoding_vars, umap_target_name,
+                        #                bin_or_cont)
+                        #
+                        # clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
+                        # fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_eigenvecs', eigen_df, eigen_encoding_vars,
+                        #                eigen_target_name, bin_or_cont)
 
-                        ## Semisupervised autoenc
-                        semi_supervised_autoenc_df, semi_sup_autoenc_encoding_vars, semi_sup_autoenc_target_name = get_semi_supervised_autoencoded_data(
-                            case, ev_model,
-                            iteration, m)
-
-                        clf_instance = LogisticRegression(**logit_init_kwargs)
-                        fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_autoenc_supervised', semi_supervised_autoenc_df,
-                                       semi_sup_autoenc_encoding_vars,
-                                       semi_sup_autoenc_target_name, bin_or_cont)
                         clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
-                        fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_autoenc_supervised', semi_supervised_autoenc_df,
-                                       semi_sup_autoenc_encoding_vars,
-                                       semi_sup_autoenc_target_name, bin_or_cont)
+                        fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_PEM', PEM_df, PEM_encoding_vars, PEM_target_name,
+                                       bin_or_cont)
+                        #
+                        # # # ### Semisupervised umap
+                        # semi_supervised_umap_df, semi_sup_umap_encoding_vars, semi_sup_umap_target_name = get_semi_supervised_umap_data(case,
+                        #                                                                                                                 ev_model,
+                        #                                                                                                                 iteration, m)
+                        # clf_instance = LogisticRegression(**logit_init_kwargs)
+                        # fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_umap_supervised', semi_supervised_umap_df,
+                        #                semi_sup_umap_encoding_vars,
+                        #                semi_sup_umap_target_name, bin_or_cont)
+                        # clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
+                        # fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_umap_supervised', semi_supervised_umap_df,
+                        #                semi_sup_umap_encoding_vars,
+                        #                semi_sup_umap_target_name, bin_or_cont)
+                        #
+                        # # ### autoencoder
+                        # clf_instance = LogisticRegression(**logit_init_kwargs)
+                        # fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_autoencoded', autoenc_df, autoenc_encoding_vars,
+                        #                eigen_target_name, bin_or_cont)
+                        #
+                        # clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
+                        # fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_autoencoded', autoenc_df, autoenc_encoding_vars,
+                        #                umap_target_name,
+                        #                bin_or_cont)
+                        #
+                        # ## Semisupervised autoenc
+                        # semi_supervised_autoenc_df, semi_sup_autoenc_encoding_vars, semi_sup_autoenc_target_name = get_semi_supervised_autoencoded_data(
+                        #     case, ev_model,
+                        #     iteration, m)
+                        #
+                        # clf_instance = LogisticRegression(**logit_init_kwargs)
+                        # fit_and_output(clf_instance, logit_grid_search_params, out_dir, 'logit_autoenc_supervised', semi_supervised_autoenc_df,
+                        #                semi_sup_autoenc_encoding_vars,
+                        #                semi_sup_autoenc_target_name, bin_or_cont)
+                        # clf_instance = XGBClassifier(**xgb_clf_init_kwargs)
+                        # fit_and_output(clf_instance, xgb_clf_grid_search_params, out_dir, 'xgb_autoenc_supervised', semi_supervised_autoenc_df,
+                        #                semi_sup_autoenc_encoding_vars,
+                        #                semi_sup_autoenc_target_name, bin_or_cont)
 
                     elif bin_or_cont == 'continuous':
-                        clf_instance = LinearRegression(**linear_init_kwargs)
-                        fit_and_output(clf_instance, linear_grid_search_params, out_dir, 'linear_umap', umap_df, umap_encoding_vars, umap_target_name,
-                                       bin_or_cont)
+                        # clf_instance = LinearRegression(**linear_init_kwargs)
+                        # fit_and_output(clf_instance, linear_grid_search_params, out_dir, 'linear_umap', umap_df, umap_encoding_vars, umap_target_name,
+                        #                bin_or_cont)
+                        #
+                        # clf_instance = LinearRegression(**linear_init_kwargs)
+                        # fit_and_output(clf_instance, linear_grid_search_params, out_dir, 'linear_eigenvecs', eigen_df, eigen_encoding_vars,
+                        #                eigen_target_name, bin_or_cont)
 
                         clf_instance = LinearRegression(**linear_init_kwargs)
-                        fit_and_output(clf_instance, linear_grid_search_params, out_dir, 'linear_eigenvecs', eigen_df, eigen_encoding_vars,
-                                       eigen_target_name, bin_or_cont)
-
-                        clf_instance = XGBRegressor(**xgb_rgr_init_kwargs)
-                        fit_and_output(clf_instance, xgb_rgr_grid_search_params, out_dir, 'xgb_umap', umap_df, umap_encoding_vars, umap_target_name,
+                        fit_and_output(clf_instance, linear_grid_search_params, out_dir, 'linear_PEM', PEM_df, PEM_encoding_vars, PEM_target_name,
                                        bin_or_cont)
 
+                        # clf_instance = XGBRegressor(**xgb_rgr_init_kwargs)
+                        # fit_and_output(clf_instance, xgb_rgr_grid_search_params, out_dir, 'xgb_umap', umap_df, umap_encoding_vars, umap_target_name,
+                        #                bin_or_cont)
+                        #
+                        # clf_instance = XGBRegressor(**xgb_rgr_init_kwargs)
+                        # fit_and_output(clf_instance, xgb_rgr_grid_search_params, out_dir, 'xgb_eigenvecs', eigen_df, eigen_encoding_vars,
+                        #                eigen_target_name, bin_or_cont)
+
                         clf_instance = XGBRegressor(**xgb_rgr_init_kwargs)
-                        fit_and_output(clf_instance, xgb_rgr_grid_search_params, out_dir, 'xgb_eigenvecs', eigen_df, eigen_encoding_vars,
-                                       eigen_target_name, bin_or_cont)
+                        fit_and_output(clf_instance, xgb_rgr_grid_search_params, out_dir, 'xgb_PEM', PEM_df, PEM_encoding_vars, PEM_target_name,
+                                       bin_or_cont)
 
                         ### autoencoder
-                        clf_instance = LinearRegression(**linear_init_kwargs)
-                        fit_and_output(clf_instance, linear_grid_search_params, out_dir, 'linear_autoencoded', autoenc_df, autoenc_encoding_vars,
-                                       eigen_target_name, bin_or_cont)
-
-                        clf_instance = XGBRegressor(**xgb_rgr_init_kwargs)
-                        fit_and_output(clf_instance, xgb_rgr_grid_search_params, out_dir, 'xgb_autoencoded', autoenc_df, autoenc_encoding_vars,
-                                       umap_target_name,
-                                       bin_or_cont)
+                        # clf_instance = LinearRegression(**linear_init_kwargs)
+                        # fit_and_output(clf_instance, linear_grid_search_params, out_dir, 'linear_autoencoded', autoenc_df, autoenc_encoding_vars,
+                        #                eigen_target_name, bin_or_cont)
+                        #
+                        # clf_instance = XGBRegressor(**xgb_rgr_init_kwargs)
+                        # fit_and_output(clf_instance, xgb_rgr_grid_search_params, out_dir, 'xgb_autoencoded', autoenc_df, autoenc_encoding_vars,
+                        #                umap_target_name,
+                        #                bin_or_cont)
 
 
 if __name__ == '__main__':
