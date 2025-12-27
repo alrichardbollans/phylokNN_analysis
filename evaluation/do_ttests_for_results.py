@@ -15,14 +15,15 @@ def ttests(full_df: pd.DataFrame, model_names, out_dir):
     pathlib.Path(out_dir).mkdir(exist_ok=True, parents=True)
 
     ttest_dict = {}
-    for model_name2 in model_names:
-        if 'corHMM' in model_names:
-            model_name1 = 'corHMM'
-        if 'phylopars'in model_names:
-            model_name1 = 'phylopars'
-        if model_name1 != model_name2:
-            if model_name1 in full_df.columns and model_name2 in full_df.columns:
-                t_stat, p_value = ttest_rel(full_df[model_name1], full_df[model_name2], nan_policy='omit')
+    for pair in list(combinations(model_names, 2)):
+            model_name1, model_name2 = pair
+        # if 'corHMM' in model_names:
+        #     model_name1 = 'corHMM'
+        # if 'phylopars'in model_names:
+        #     model_name1 = 'phylopars'
+            if model_name1 != model_name2:
+            # if model_name1 in full_df.columns and model_name2 in full_df.columns:
+                t_stat, p_value = ttest_rel(full_df[model_name1], full_df[model_name2])#, nan_policy='omit')
                 ttest_dict[f'{model_name1}_{model_name2}'] = [t_stat, p_value]
     # Convert to a DataFrame
     ttest_df = pd.DataFrame(ttest_dict, index=['stat', 'p value'])
@@ -33,10 +34,6 @@ def ttests(full_df: pd.DataFrame, model_names, out_dir):
         # if test_results[c].loc['p value']<_alpha:
         reformatted_ttest_df.append([c, ttest_df[c].loc['stat'], ttest_df[c].loc['p value']])
 
-    # raw_test_results = pd.read_csv(os.path.join(eval_dir, 'raw_ttest_results.csv'), index_col=0)
-    # for c in raw_test_results.columns:
-    #     # if raw_test_results[c].loc['p value']<_alpha:
-    #         significant_cases.append([c, raw_test_results[c].loc['stat'],raw_test_results[c].loc['p value']])
     reformatted_ttest_df = pd.DataFrame(reformatted_ttest_df, columns=['models', 'stat', 'p value'])
 
     corrected_df = hochberg_correction(reformatted_ttest_df, p_value_col='p value')
