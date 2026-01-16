@@ -22,6 +22,8 @@ def plot_binary_and_continuous_cases(bin_df, cont_df, group, out_dir):
     ## do a useful plot
     ## Turn  Model columns into useful row values
     p_df = pd.melt(bin_df, id_vars=group, value_vars=bin_model_names, var_name='Model', value_name='Brier Score')
+    if 'Missing Type' in p_df.columns:
+        p_df['Missing Type'] = p_df['Missing Type'].map({'mcar': 'MCAR'}).fillna(p_df['Missing Type'])
     # p_df['Ev Model'] = p_df['Ev Model'].map(
     #     {'simulations': 'ARD/SYM/ER', 'Extinct_BMT': 'BMT †', 'real_data': 'Clonality'}).fillna(p_df['Ev Model'])
     p_df['Model'] = p_df['Model'].map(rename_models_and_ev_models).fillna(p_df['Model'])
@@ -61,6 +63,8 @@ def plot_binary_and_continuous_cases(bin_df, cont_df, group, out_dir):
     # p_df['Ev Model'] = p_df['Ev Model'].map(
     #     {'simulations': 'BM/OU', 'Extinct_BMT': 'BMT †', 'real_data': 'Seed Mass'}).fillna(p_df['Ev Model'])
     p_df['Model'] = p_df['Model'].map(rename_models_and_ev_models).fillna(p_df['Model'])
+    if 'Missing Type' in p_df.columns:
+        p_df['Missing Type'] = p_df['Missing Type'].map({'mcar': 'MCAR'}).fillna(p_df['Missing Type'])
     if group == 'Ev Model':
         ev_order = simulation_types['continuous']
         p_df = p_df.sort_values(by="Ev Model", key=lambda column: column.map(lambda e: ev_order.index(e)))
