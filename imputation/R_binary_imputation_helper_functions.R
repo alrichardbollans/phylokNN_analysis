@@ -42,7 +42,7 @@ format_corhmm <- function(corhmm_output, plant_names_to_predict, ratecat){
   return(output_data)
 }
 
-get_folds <- function(non_missing_data){
+get_folds <- function(non_missing_data, target){
   if(length(unique(non_missing_data[[target]])) == 1) {
     skfolds =NULL
     unique_target = unique(non_missing_data[[target]])[1]
@@ -89,7 +89,7 @@ run_corHMM_models <- function(case, simulation_ev_model, iteration, missing_type
       missing_values_with_tree_labels = setup_$missing_values_with_tree_labels
       target = setup_$target
       non_missing_data = setup_$non_missing_data
-      skfolds = get_folds(non_missing_data)
+      skfolds = get_folds(non_missing_data, target)
       training_tree = setup_$training_tree
       unique_target = setup_$unique_target
       
@@ -285,7 +285,7 @@ run_picante_models <- function(case, simulation_ev_model, iteration, missing_typ
     missing_values_with_tree_labels = setup_$missing_values_with_tree_labels
     target = setup_$target
     non_missing_data = setup_$non_missing_data
-    skfolds = get_folds(non_missing_data)
+    skfolds = get_folds(non_missing_data, target)
     training_tree = setup_$training_tree
     if(!ape::is.binary(training_tree)){
       training_tree=ape::multi2di(training_tree)

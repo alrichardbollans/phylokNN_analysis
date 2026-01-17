@@ -78,7 +78,7 @@ def get_model_predictions(case: str, ev_model: str, iteration: int, missing_type
     return dfs
 
 
-def evaluate_model_outputs_for_specific_case(case: str, ev_model: str, iteration: int, missing_type: str, scorer=None):
+def evaluate_model_outputs_for_specific_case(case: str, ev_model: str, iteration: int, missing_type: str, scorer=None, signal=True):
     treepath, data_path = get_input_data_paths(case, ev_model, iteration)
     out_dict = {}
 
@@ -89,14 +89,14 @@ def evaluate_model_outputs_for_specific_case(case: str, ev_model: str, iteration
     out_dict['Missing Type'] = missing_type
     out_dict['Tree Type'] = case
     out_dict['Variable Type'] = bin_or_cont
+    if signal:
+        if bin_or_cont == 'binary':
+            signal_df = pd.read_csv(os.path.join(data_path, 'phylogenetic_signal_results_D.csv'), index_col=0)
 
-    if bin_or_cont == 'binary':
-        signal_df = pd.read_csv(os.path.join(data_path, 'phylogenetic_signal_results_D.csv'), index_col=0)
-
-    else:
-        signal_df = pd.read_csv(os.path.join(data_path, 'phylogenetic_signal_results_lambda.csv'), index_col=0)
-    signal = signal_df['value'].iloc[0]
-    out_dict['Signal'] = signal
+        else:
+            signal_df = pd.read_csv(os.path.join(data_path, 'phylogenetic_signal_results_lambda.csv'), index_col=0)
+        signal = signal_df['value'].iloc[0]
+        out_dict['Signal'] = signal
     # Compile predictions on test data with ground truth
     ground_truth = pd.read_csv(os.path.join(data_path, 'ground_truth.csv'), index_col=0)
     assert len(ground_truth.columns) == 1
@@ -166,7 +166,7 @@ def output_results_from_df(full_df: pd.DataFrame, out_dir: str, ev_model: str, s
 
 
 def collate_simulation_outputs(ev_model: str,
-                               range_to_eval: int = number_of_simulation_iterations, scorer=None, out_dir=None):
+                               range_to_eval: int = number_of_simulation_iterations, scorer=None, out_dir=None, signal=True):
     full_df = pd.DataFrame()
     for tag in range(1, range_to_eval + 1):
         for case in ['ultrametric', 'with_extinct']:
@@ -176,7 +176,7 @@ def collate_simulation_outputs(ev_model: str,
             for missing_type in missingness_types:
                 if ev_model == 'APM' and missing_type == 'phyloNa':
                     continue
-                run_dict = evaluate_model_outputs_for_specific_case(case, ev_model, tag, missing_type, scorer=scorer)
+                run_dict = evaluate_model_outputs_for_specific_case(case, ev_model, tag, missing_type, scorer=scorer, signal=signal)
                 run_df = pd.DataFrame(run_dict, index=[tag])
                 full_df = pd.concat([full_df, run_df])
     if out_dir is None:
