@@ -172,8 +172,8 @@ def main():
     binary_below_06_df.describe(include='all').to_csv(os.path.join(out_dir, 'weak signal', 'binary_results_summary.csv'))
     continuous_below_06_df.describe(include='all').to_csv(os.path.join(out_dir, 'weak signal', 'continuous_results_summary.csv'))
 
-    ttests(binary_below_06_df, bin_model_names, os.path.join(out_dir, 'weak signal', 'binary'))
-    ttests(continuous_below_06_df, cont_model_names, os.path.join(out_dir, 'weak signal', 'continuous'))
+    ttests(binary_below_06_df, bin_model_names, os.path.join(out_dir, 'weak signal', 'binary'), specific_model_to_test='corHMM')
+    ttests(continuous_below_06_df, cont_model_names, os.path.join(out_dir, 'weak signal', 'continuous'), specific_model_to_test='phylopars')
 
 
 

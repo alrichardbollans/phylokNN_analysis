@@ -11,18 +11,20 @@ from evaluation.helper_functions import bin_model_names, cont_model_names
 _alpha = 0.05
 
 
-def ttests(full_df: pd.DataFrame, model_names, out_dir):
+def ttests(full_df: pd.DataFrame, model_names, out_dir, specific_model_to_test:str= None):
     pathlib.Path(out_dir).mkdir(exist_ok=True, parents=True)
 
     ttest_dict = {}
-    for pair in list(combinations(model_names, 2)):
-            model_name1, model_name2 = pair
-        # if 'corHMM' in model_names:
-        #     model_name1 = 'corHMM'
-        # if 'phylopars'in model_names:
-        #     model_name1 = 'phylopars'
+    if specific_model_to_test is not None:
+        for model_name2 in model_names:
+            model_name1 = specific_model_to_test
             if model_name1 != model_name2:
-            # if model_name1 in full_df.columns and model_name2 in full_df.columns:
+                t_stat, p_value = ttest_rel(full_df[model_name1], full_df[model_name2])  # , nan_policy='omit')
+                ttest_dict[f'{model_name1}_{model_name2}'] = [t_stat, p_value]
+    else:
+        for pair in list(combinations(model_names, 2)):
+            model_name1, model_name2 = pair
+            if model_name1 != model_name2:
                 t_stat, p_value = ttest_rel(full_df[model_name1], full_df[model_name2])#, nan_policy='omit')
                 ttest_dict[f'{model_name1}_{model_name2}'] = [t_stat, p_value]
     # Convert to a DataFrame
