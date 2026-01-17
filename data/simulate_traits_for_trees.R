@@ -145,7 +145,7 @@ for(i in 1:number_of_repetitions){
     output_simulation(sim_path, bm_sample, 'BM')
     # 
     bmt_sample = get_BM_T_sample(sim_path,TRUE)
-    output_simulation(sim_path, bm_sample, 'BMT')
+    output_simulation(sim_path, bmt_sample, 'BMT')
 
   }
 }
