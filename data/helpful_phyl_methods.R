@@ -68,7 +68,13 @@ get_iteration_path_from_base <- function(base, case, ev_model, iteration) {
   }else if(ev_model %in% c('APM')){
     basepath = file.path(base, 'my_apm_data', case, ev_model)
     
-  }else {
+  }else if (ev_model == "large_BiSSE"){
+    basepath <- file.path(base,'simulations', case, 'BiSSE_large_trees')
+  }else if (ev_model == "large_BMT"){
+    basepath <- file.path(base,'simulations', case, 'large_trees')
+  }
+
+  else {
     basepath = file.path(base, 'simulations', case, 'standard')
   }
   

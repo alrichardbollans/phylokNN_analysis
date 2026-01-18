@@ -25,7 +25,10 @@ def get_iteration_path_from_base(base: str, case: str, ev_model: str, iteration:
         basepath = os.path.join(base, 'real_data', case, ev_model)
     elif ev_model in ['APM']:
         basepath = os.path.join(base, 'my_apm_data', case, ev_model)
-
+    elif ev_model == "large_BiSSE":
+        basepath = os.path.join(base, 'simulations', case, 'BiSSE_large_trees')
+    elif ev_model == "large_BMT":
+        basepath = os.path.join(base, 'simulations', case, 'large_trees')
     else:
         basepath = os.path.join(base, 'simulations', case, 'standard')
 
@@ -66,9 +69,9 @@ def check_data(ground_truth, missing_values):
 
 
 def get_bin_or_cont_from_ev_model(ev_model: str):
-    if ev_model in simulation_types['binary'] or ev_model=='APM':
+    if ev_model in simulation_types['binary'] or ev_model=='APM' or ev_model=='large_BiSSE':
         return 'binary'
-    elif ev_model in simulation_types['continuous']:
+    elif ev_model in simulation_types['continuous'] or ev_model=='large_BMT':
         return 'continuous'
     else:
         raise ValueError(f'Unknown data type {ev_model}')
