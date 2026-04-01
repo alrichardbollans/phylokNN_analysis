@@ -5,6 +5,17 @@ conventional approaches. Description and analysis of these
 methods are described
 in: [The persistent advantage of model-based phylogenetic methods for single-trait prediction](https://doi.org/10.1111/2041-210x.70258).
 
+## A Note on Tree Size
+
+The analysis in the related publication is based on trees with 100 extant species. As noted in the manuscript, it is of course possible that the
+machine learning methods perform better using trees with more species records for training. We have tested some cases using trees with 1000 extant
+species and have found similar
+results [large_compiled_score_outputs](https://github.com/alrichardbollans/phylokNN_analysis/tree/master/evaluation/large_compiled_score_outputs). To
+limit excessive computation, we looked at only ultrametric trees in the MCAR scenario. We looked at only a single evolutionary simulation model for
+both binary and continuous cases, which was selected by looking in the main analysis where the performance of one of the ML methods was closest to the
+corHMM and phylopars models, which turned out to be BiSSE and BMT. This is a limited result which would require further investigation, especially with
+real traits, but helps to support the original hypothesis.
+
 ## To cite
 
 If you find these analyses useful, please cite the related
@@ -25,12 +36,6 @@ eprint = {https://besjournals.onlinelibrary.wiley.com/doi/pdf/10.1111/2041-210x.
 year = {2026}
 }
 ```
-
-## Citation
-
-
-## A Note on Tree Size
-The analysis in the related publication is based on trees with 100 extant species. As noted in the manuscript, it is of course possible that the machine learning methods perform better using trees with more species records for training. We have tested some cases using trees with 1000 extant species and have found similar results [large_compiled_score_outputs](https://github.com/alrichardbollans/phylokNN_analysis/tree/master/evaluation/large_compiled_score_outputs). To limit excessive computation, we looked at only ultrametric trees in the MCAR scenario. We looked at only a single evolutionary simulation model for both binary and continuous cases, which was selected by looking in the main analysis where the performance of one of the ML methods was closest to the corHMM and phylopars models, which turned out to be BiSSE and BMT. This is a limited result which would require further investigation, especially with real traits, but helps to support the original hypothesis.
 
 ## Licence
 
